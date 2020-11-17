@@ -8,6 +8,10 @@ import MySQLdb
 
 
 def lang():
+    """
+    language base/база языков
+    :return: menu - словарь фраз
+    """
     """translation base/база языков"""
     if lang_index == 1:
         menu = [
@@ -40,13 +44,17 @@ def lang():
 
 
 def sleep_timer(x):
-    """deferral of execution/отсрочка выполнения"""
+    """
+    deferral of execution/отсрочка выполнения
+    """
     start = time()
     sleep((time() - start) + x)
 
 
 def lang_mess(menu):
-    """language selection/выбор языка"""
+    """
+    language selection/выбор языка
+    """
     global delete_mess
     delete_mess = bot.send_message(menu.message.chat.id, lang()[4]).message_id
     sleep_timer(2)
@@ -55,7 +63,9 @@ def lang_mess(menu):
 
 
 def mess_delete(x):
-    """delete recent posts/удаление последних сообщений"""
+    """
+    delete recent posts/удаление последних сообщений
+    """
     global delete_mess
     i = 0
     while i < x:
@@ -64,8 +74,8 @@ def mess_delete(x):
         i += 1
 
 
-bot = telebot.TeleBot('1196186813:AAHNbYTl50KD2zdeT98gLW3e8Na20N4K3tk')
-lang_index = 1
+bot = telebot.TeleBot('1196186813:AAHNbYTl50KD2zdeT98gLW3e8Na20N4K3tk')  # ключ бота
+lang_index = 1  # selected language key/ключ выбранного языка
 delete_mess = 0
 delete_chat = 0
 start_index = 0
@@ -87,12 +97,13 @@ def get_text_messages(message):
     log.close()
     user_id = message.from_user.id
     print(user_id)
-    if add_index == 1:
+    if add_index == 1:  # adding a note/добавление заметки
         conn = MySQLdb.connect(
-            'localhost',
-            'root',
-            'mike159753',
-            'universalassistant')
+            host='localhost',
+            user='root',
+            passwd='mike159753',
+            db='universalassistant',
+            charset='utf8')
         cursor = conn.cursor()
         cursor.execute(
             """INSERT INTO notes(user, note) VALUES (%d, %r)""" %
@@ -130,18 +141,19 @@ def get_text_messages(message):
 def inline(menu):
     """click processing/обработка нажатий"""
     global lang_index
-    global add_index
+    global add_index  # note adding key/ключ добавления заметки
     global mass_notes
 
     if menu.data == 'notes':
         mess_delete(2)
         bot.send_message(menu.message.chat.id, 'Ваш список заметок:')
-
+        # printing notes/печать заметок
         conn = MySQLdb.connect(
-            'localhost',
-            'root',
-            'mike159753',
-            'universalassistant')
+            host='localhost',
+            user='root',
+            passwd='mike159753',
+            db='universalassistant',
+            charset='utf8')
         cursor = conn.cursor()
         cursor.execute(
             """SELECT id, note FROM notes WHERE user = '%d'""" %
