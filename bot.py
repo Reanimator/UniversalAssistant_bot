@@ -7,7 +7,7 @@ from time import time, sleep
 import MySQLdb
 
 
-def lang():
+def lang():  # Передавать lang_index чтобы избавиться от глобальной переменной ????
     """
     language base/база языков
     :return: menu - словарь фраз
@@ -15,13 +15,24 @@ def lang():
     """translation base/база языков"""
     if lang_index == 1:
         menu = [
-            'Заметки',
+            'Заметки',  # 0
             'Список покупок',
             'Выбор языка/Select language/Sprachauswahl',
             'Выберете действие:',
             'Готово',
-            'Добрый день!',
-            'Для продолжения введите любой символ']
+            'Добрый день!',  # 5
+            'Для продолжения введите любой символ',
+            'Заметка добавлена',
+            'Для начала введите start',
+            'Ваш список заметок:',
+            'Добавить заметку',  # 10
+            'Удалить заметку',
+            'Удалить все заметки',
+            'Что вы хотите сделать?',
+            'Введите заметку',
+            'Какую запись удалить?',  # 15
+            'Все заметки удалены'
+            'Заметка удалена']
     elif lang_index == 2:
         menu = [
             'Notes',
@@ -30,7 +41,18 @@ def lang():
             'Choose action:',
             'Done',
             'Good day!',
-            'Enter any character to continue.']
+            'Enter any character to continue.',
+            'Note added',
+            'First enter start',
+            'Your list of notes:',
+            'Add note',
+            'Delete note',
+            'Delete all notes',
+            'What do you want to do?',
+            'Enter note',
+            'Which entry to delete?',
+            'All notes deleted',
+            'Note deleted']
     elif lang_index == 3:
         menu = [
             'Notizen',
@@ -39,7 +61,18 @@ def lang():
             'Aktion auswählen',
             'Fertig',
             'Guten Tag!',
-            'Geben Sie ein beliebiges Zeichen ein, um fortzufahren.']
+            'Geben Sie ein beliebiges Zeichen ein, um fortzufahren.',
+            'Hinweis hinzugefügt',
+            'Zuerst Start eingeben',
+            'Ihre Liste von Notizen:',
+            'Notiz hinzufügen',
+            'Notiz löschen',
+            'Alle Notizen löschen',
+            'Was möchten Sie tun?',
+            'Notiz eingeben',
+            'Welchen Eintrag soll gelöscht werden?',
+            'Alle Notizen gelöscht',
+            'Notiz gelöscht']
     return menu
 
 
@@ -110,11 +143,13 @@ def get_text_messages(message):
             (user_id, message.text))
         conn.commit()
         conn.close()
-        bot.send_message(user_id, text='Заметка добавлена').chat.id
+        bot.send_message(user_id, text=lang()[7]).chat.id
+
+
         add_index = 0
     if start_index == 0:
         # !!!Добавить в перевод
-        bot.send_message(user_id, text='Для начала введите start').chat.id
+        bot.send_message(user_id, text=lang()[8]).chat.id
     elif start_index == 1:
         start_index = 0
     if message.text == 'start':
@@ -146,8 +181,8 @@ def inline(menu):
 
     if menu.data == 'notes':
         mess_delete(2)
-        bot.send_message(menu.message.chat.id, 'Ваш список заметок:')
         # printing notes/печать заметок
+        bot.send_message(menu.message.chat.id, lang()[9])
         conn = MySQLdb.connect(
             host='localhost',
             user='root',
@@ -168,20 +203,20 @@ def inline(menu):
             mass_notes[rows[i][0]] = rows[i][1]
             j += 1
         conn.close()
-
+        # button output/вывод кнопок
         key = types.InlineKeyboardMarkup()
         key_add = types.InlineKeyboardButton(
-            text="Добавить заметку", callback_data="add")
+            text=lang()[10], callback_data="add")
         key_del = types.InlineKeyboardButton(
-            text="Удалить заметку", callback_data="del")
+            text=lang()[11], callback_data="del")
         key_del_all = types.InlineKeyboardButton(
-            text="Удалить все заметки", callback_data="del_all")
+            text=lang()[12], callback_data="del_all")
         key.add(key_add)
         key.add(key_del)
         key.add(key_del_all)
         bot.send_message(
             menu.message.chat.id,
-            'Что вы хотите сделать?',
+            lang()[13],
             reply_markup=key)
 
     if menu.data == 'shop_list':
@@ -213,7 +248,7 @@ def inline(menu):
         lang_mess(menu)
     if menu.data == 'add':
         add_index = 1
-        bot.send_message(menu.message.chat.id, 'Введите заметку')
+        bot.send_message(menu.message.chat.id, lang()[14])
     if menu.data == 'del':
         key = types.InlineKeyboardMarkup()
         j = 1
@@ -226,7 +261,7 @@ def inline(menu):
             j += 1
         bot.send_message(
             menu.message.chat.id,
-            'Какую запись удалить?',
+            lang()[15],
             reply_markup=key)
     if menu.data == 'del_all':
         conn = MySQLdb.connect(
@@ -238,7 +273,7 @@ def inline(menu):
         cursor.execute("""DELETE FROM notes WHERE user = '%d'""" % user_id)
         conn.commit()
         conn.close()
-        bot.send_message(menu.message.chat.id, 'Все заметки удалены')
+        bot.send_message(menu.message.chat.id, lang()[16])
         # bot.send_message(menu.message.chat.id, 'Заглушка')
     if mass_notes != {}:
         for i in mass_notes:
@@ -249,7 +284,7 @@ def inline(menu):
                 cursor.execute("""DELETE FROM notes WHERE id = '%d'""" % i)
                 conn.commit()
                 conn.close()
-                bot.send_message(menu.message.chat.id, 'Заметка удалена')
+                bot.send_message(menu.message.chat.id, lang()[17])
                 print(i)
                 print(menu.data)
 
