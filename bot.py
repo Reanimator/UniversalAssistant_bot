@@ -11,7 +11,7 @@ bot = telebot.TeleBot(
     '1196186813:AAHNbYTl50KD2zdeT98gLW3e8Na20N4K3tk')  # ключ бота
 lang_index = 1  # selected language key/ключ выбранного языка
 delete_mess = []
-delete_chat = 0
+chat_id = 0
 start_index = 0
 add_index = 0
 mass_notes = {}
@@ -109,7 +109,7 @@ def mess_delete():
     global delete_mess
 
     for mess in delete_mess:
-        bot.delete_message(delete_chat, mess)
+        bot.delete_message(chat_id, mess)
     delete_mess = []
 
 
@@ -117,7 +117,7 @@ def mess_delete():
 def get_text_messages(message):
     """input processing/обработка ввода"""
     global user_id
-    global delete_chat
+    global chat_id
     global delete_mess
     # global start_index
     global add_index
@@ -125,6 +125,7 @@ def get_text_messages(message):
     global begin_notes
 
     print(message)
+    print(message.chat.id)
 
     log = open('log.txt', 'a', encoding='utf8')
     log.write(str(datetime.datetime.today()) + ' --- ' +
@@ -132,15 +133,19 @@ def get_text_messages(message):
     log.close()
     user_id = message.from_user.id
     print(user_id)
-    delete_chat = message.chat.id
+    chat_id = message.chat.id
     if message != begin_message:
         delete_mess.append(message.message_id)
     mess_delete()
     if message.text != 'start' and add_index != 1:
+
+
         delete_mess.append(
             bot.send_message(
-                user_id,
-                text=lang()[8]).message_id)
+                message.chat.id,
+                lang()[8]).message_id)
+
+
     if add_index == 1:  # adding a note/добавление заметки
         conn = MySQLdb.connect(
             host='localhost',
@@ -151,13 +156,13 @@ def get_text_messages(message):
         cursor = conn.cursor()
         cursor.execute(
             """INSERT INTO notes(user, note) VALUES (%d, %r)""" %
-            (user_id, message.text))
+            (message.from_user.id, message.text))
         conn.commit()
         conn.close()
         mess_delete()
         delete_mess.append(
             bot.send_message(
-                user_id,
+                message.chat.id,
                 text=lang()[7]).message_id)
         sleep(2)
         add_index = 0
@@ -181,9 +186,9 @@ def get_text_messages(message):
         keyboard.add(key_select_lang)
 
         delete_mess.append(bot.send_message(
-            message.from_user.id, text=lang()[5]).message_id)
+            message.chat.id, text=lang()[5]).message_id)
         delete_mess.append(bot.send_message(
-            message.from_user.id,
+            message.chat.id,
             text=lang()[3],
             reply_markup=keyboard).message_id)
 
@@ -194,7 +199,7 @@ def inline(menu):
     global lang_index
     global add_index  # note adding key/ключ добавления заметки
     global mass_notes
-    global delete_chat
+    global chat_id
     global delete_mess
     global begin_notes
 
@@ -205,7 +210,7 @@ def inline(menu):
         mess_delete()
         # printing notes/печать заметок
         begin_notes = menu
-        delete_chat = bot.send_message(menu.message.chat.id, lang()[9]).chat.id
+        delete_mess.append(bot.send_message(menu.message.chat.id, lang()[9]).message_id)
         conn = MySQLdb.connect(
             host='localhost',
             user='root',
@@ -215,14 +220,14 @@ def inline(menu):
         cursor = conn.cursor()
         cursor.execute(
             """SELECT id, note FROM notes WHERE user = '%d'""" %
-            user_id)
+            menu.from_user.id)
         rows = cursor.fetchall()
         mass_notes = {}
         j = 1
         for i in range(len(rows)):
-            bot.send_message(
+            delete_mess.append(bot.send_message(
                 menu.message.chat.id, ('%d -- %s' %
-                                       (j, rows[i][1])))  # rows[i][0]
+                                       (j, rows[i][1]))).message_id)  # rows[i][0]
             mass_notes[rows[i][0]] = rows[i][1]
             print(mass_notes)
             j += 1
@@ -245,7 +250,7 @@ def inline(menu):
 
     if menu.data == 'shop_list':
         mess_delete()
-        delete_chat = bot.send_message(
+        chat_id = bot.send_message(
             menu.message.chat.id, 'Это кнопка 2').chat.id
         delete_mess.append(
             bot.send_message(
@@ -267,12 +272,15 @@ def inline(menu):
             reply_markup=key).message_id)
     if menu.data == 'rus':
         lang_index = 1
+        mess_delete()
         lang_mess(menu)
     if menu.data == 'eng':
         lang_index = 2
+        mess_delete()
         lang_mess(menu)
     if menu.data == 'deut':
         lang_index = 3
+        mess_delete()
         lang_mess(menu)
     if menu.data == 'add':
         add_index = 1
@@ -304,7 +312,7 @@ def inline(menu):
             'mike159753',
             'universalassistant')
         cursor = conn.cursor()
-        cursor.execute("""DELETE FROM notes WHERE user = '%d'""" % user_id)
+        cursor.execute("""DELETE FROM notes WHERE user = '%d'""" % menu.from_user.id)
         conn.commit()
         conn.close()
         mess_delete()
