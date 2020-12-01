@@ -88,15 +88,15 @@ def lang():  # Передавать lang_index чтобы избавиться �
     return menu
 
 
-def mess_delete(chat_id, user_id):
+def mess_delete(chat_id):
     """
     delete recent posts/удаление последних сообщений
     """
     global delete_mess
-
-    for mess in delete_mess[user_id]:
+    print(f'chat{chat_id}')
+    for mess in delete_mess[chat_id]:
         bot.delete_message(chat_id, mess)
-    delete_mess[user_id] = []
+    delete_mess[chat_id] = []
 
 
 @bot.message_handler(content_types=['text'])
@@ -107,11 +107,16 @@ def get_text_messages(message):
     global begin_message
     global begin_notes
 
+    print(message)
+    print(message.from_user.id)
+    print(message.message_id)
+    print(message.chat.id)
+
     # Создание листа для сообщений пользователя, если он не существует
     try:
-        delete_mess[message.from_user.id]
+        delete_mess[message.chat.id]
     except KeyError:
-        delete_mess[message.from_user.id] = []
+        delete_mess[message.chat.id] = []
 
     log = open('log.txt', 'a', encoding='utf8')
     log.write(str(datetime.datetime.today()) + ' --- ' +
@@ -119,11 +124,11 @@ def get_text_messages(message):
     log.close()
 
     if message != begin_message:
-        delete_mess[message.from_user.id].append(message.message_id)
-
-    mess_delete(message.chat.id, message.from_user.id)
+        delete_mess[message.chat.id].append(message.message_id)
+        print(delete_mess)
+    mess_delete(message.chat.id)
     if message.text != 'start' and add_index != 1:
-        delete_mess[message.from_user.id].append(
+        delete_mess[message.chat.id].append(
             bot.send_message(
                 message.chat.id,
                 lang()[8]).message_id)
@@ -140,7 +145,7 @@ def get_text_messages(message):
             (message.from_user.id, message.text))
         conn.commit()
         conn.close()
-        mess_delete(message.chat.id, message.from_user.id)
+        mess_delete(message.chat.id)
         add_index = 0
         inline(begin_notes)
 
@@ -157,9 +162,9 @@ def get_text_messages(message):
         keyboard.add(key_notes, key_shop_list)
         keyboard.add(key_select_lang)
 
-        delete_mess[message.from_user.id].append(bot.send_message(
+        delete_mess[message.chat.id].append(bot.send_message(
             message.chat.id, text=lang()[5]).message_id)
-        delete_mess[message.from_user.id].append(bot.send_message(
+        delete_mess[message.chat.id].append(bot.send_message(
             message.chat.id,
             text=lang()[3],
             reply_markup=keyboard).message_id)
@@ -176,11 +181,11 @@ def inline(menu):
 
     if menu.data == 'notes':
 
-        mess_delete(menu.message.chat.id, menu.from_user.id)
+        mess_delete(menu.message.chat.id)
 
         # printing notes/печать заметок
         begin_notes = menu
-        delete_mess[menu.from_user.id].append(bot.send_message(menu.message.chat.id, lang()[9]).message_id)
+        delete_mess[menu.message.chat.id].append(bot.send_message(menu.message.chat.id, lang()[9]).message_id)
         conn = MySQLdb.connect(
             host='localhost',
             user='root',
@@ -195,7 +200,7 @@ def inline(menu):
         mass_notes = {}
         j = 1
         for i in range(len(rows)):
-            delete_mess[menu.from_user.id].append(bot.send_message(
+            delete_mess[menu.message.chat.id].append(bot.send_message(
                 menu.message.chat.id, ('%d -- %s' %
                                        (j, rows[i][1]))).message_id)  # rows[i][0]
             mass_notes[rows[i][0]] = rows[i][1]
@@ -216,22 +221,22 @@ def inline(menu):
         key.add(key_del)
         key.add(key_del_all)
         key.add(key_main_menu)
-        delete_mess[menu.from_user.id].append(bot.send_message(
+        delete_mess[menu.message.chat.id].append(bot.send_message(
             menu.message.chat.id,
             lang()[13],
             reply_markup=key).message_id)
 
     if menu.data == 'shop_list':
-        mess_delete(menu.message.chat.id, menu.from_user.id)
-        delete_mess[menu.from_user.id].append(bot.send_message(
+        mess_delete(menu.message.chat.id)
+        delete_mess[menu.message.chat.id].append(bot.send_message(
             menu.message.chat.id, 'Это кнопка 2').chat.id)
-        delete_mess[menu.from_user.id].append(
+        delete_mess[menu.message.chat.id].append(
             bot.send_message(
                 menu.message.chat.id,
                 lang()[6]).message_id)
     if menu.data == 'select_lang':
 
-        mess_delete(menu.message.chat.id, menu.from_user.id)
+        mess_delete(menu.message.chat.id)
         key = types.InlineKeyboardMarkup()
         key_rus = types.InlineKeyboardButton(
             text="Русский", callback_data="rus")
@@ -240,26 +245,26 @@ def inline(menu):
         key_deut = types.InlineKeyboardButton(
             text="Deutsch", callback_data="deut")
         key.add(key_rus, key_eng, key_deut)
-        delete_mess[menu.from_user.id].append(bot.send_message(
+        delete_mess[menu.message.chat.id].append(bot.send_message(
             menu.message.chat.id,
             'Язык / Language / Sprache',
             reply_markup=key).message_id)
     if menu.data == 'rus':
         lang_index = 1
-        mess_delete(menu.message.chat.id, menu.from_user.id)
+        mess_delete(menu.message.chat.id)
         get_text_messages(begin_message)
     if menu.data == 'eng':
         lang_index = 2
-        mess_delete(menu.message.chat.id, menu.from_user.id)
+        mess_delete(menu.message.chat.id)
         get_text_messages(begin_message)
     if menu.data == 'deut':
         lang_index = 3
-        mess_delete(menu.message.chat.id, menu.from_user.id)
+        mess_delete(menu.message.chat.id)
         get_text_messages(begin_message)
     if menu.data == 'add':
         add_index = 1
-        mess_delete(menu.message.chat.id, menu.from_user.id)
-        delete_mess[menu.from_user.id].append(
+        mess_delete(menu.message.chat.id)
+        delete_mess[menu.message.chat.id].append(
             bot.send_message(
                 menu.message.chat.id,
                 lang()[14]).message_id)
@@ -273,8 +278,8 @@ def inline(menu):
                 i)
             key.add(temp_key)
             j += 1
-        mess_delete(menu.message.chat.id, menu.from_user.id)
-        delete_mess[menu.from_user.id].append(
+        mess_delete(menu.message.chat.id)
+        delete_mess[menu.message.chat.id].append(
             bot.send_message(
                 menu.message.chat.id,
                 lang()[15],
@@ -289,7 +294,7 @@ def inline(menu):
         cursor.execute("""DELETE FROM notes WHERE user = '%d'""" % menu.from_user.id)
         conn.commit()
         conn.close()
-        mess_delete(menu.message.chat.id, menu.from_user.id)
+        mess_delete(menu.message.chat.id)
         inline(begin_notes)
     if menu.data == 'main_menu':
         get_text_messages(begin_message)
@@ -302,7 +307,7 @@ def inline(menu):
                 cursor.execute("""DELETE FROM notes WHERE id = '%d'""" % i)
                 conn.commit()
                 conn.close()
-                mess_delete(menu.message.chat.id, menu.from_user.id)
+                mess_delete(menu.message.chat.id)
                 inline(begin_notes)
 
 
