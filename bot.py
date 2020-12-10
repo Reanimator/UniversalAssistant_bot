@@ -3,7 +3,6 @@ __author__ = 'Агеев Михаил Михайлович'
 import telebot
 from telebot import *
 import datetime
-# from time import time, sleep
 import MySQLdb
 
 
@@ -169,7 +168,7 @@ def get_text_messages(message):
         delete_mess[message.chat.id].append(
             bot.send_message(
                 message.chat.id,
-                lang(lang_index, message.chat.id)[8]).message_id)
+                text=lang(lang_index, message.chat.id)[8]).message_id)
     if add_index[message.chat.id] == 1:  # adding a note/добавление заметки
         conn = MySQLdb.connect(
             host='localhost',
@@ -218,13 +217,12 @@ def inline(menu):
     global begin_notes
 
     if menu.data == 'notes':
-
         mess_delete(menu.message.chat.id)
 
         # printing notes/печать заметок
         begin_notes = menu
         delete_mess[menu.message.chat.id].append(bot.send_message(
-            menu.message.chat.id, lang(lang_index, menu.message.chat.id)[9]).message_id)
+            menu.message.chat.id, text=lang(lang_index, menu.message.chat.id)[9]).message_id)
         conn = MySQLdb.connect(
             host='localhost',
             user='root',
@@ -272,7 +270,7 @@ def inline(menu):
         key.add(key_main_menu)
         delete_mess[menu.message.chat.id].append(bot.send_message(
             menu.message.chat.id,
-            lang(lang_index, menu.message.chat.id)[13],
+            text=lang(lang_index, menu.message.chat.id)[13],
             reply_markup=key).message_id)
 
     if menu.data == 'shop_list':
@@ -282,9 +280,8 @@ def inline(menu):
         delete_mess[menu.message.chat.id].append(
             bot.send_message(
                 menu.message.chat.id,
-                lang(lang_index, menu.message.chat.id)[6]).message_id)
+                text=lang(lang_index, menu.message.chat.id)[6]).message_id)
     if menu.data == 'select_lang':
-
         mess_delete(menu.message.chat.id)
         key = types.InlineKeyboardMarkup()
         key_rus = types.InlineKeyboardButton(
@@ -296,7 +293,7 @@ def inline(menu):
         key.add(key_rus, key_eng, key_deut)
         delete_mess[menu.message.chat.id].append(bot.send_message(
             menu.message.chat.id,
-            'Язык / Language / Sprache',
+            text='Язык / Language / Sprache',
             reply_markup=key).message_id)
     if menu.data == 'rus':
         lang_index[menu.message.chat.id] = 1
@@ -316,7 +313,7 @@ def inline(menu):
         delete_mess[menu.message.chat.id].append(
             bot.send_message(
                 menu.message.chat.id,
-                lang(lang_index, menu.message.chat.id)[14]).message_id)
+                text=lang(lang_index, menu.message.chat.id)[14]).message_id)
     if menu.data == 'del':
         key = types.InlineKeyboardMarkup()
         for seq_number, record_number in enumerate(mass_notes):
@@ -329,7 +326,7 @@ def inline(menu):
         delete_mess[menu.message.chat.id].append(
             bot.send_message(
                 menu.message.chat.id,
-                lang(lang_index, menu.message.chat.id)[15],
+                text=lang(lang_index, menu.message.chat.id)[15],
                 reply_markup=key).message_id)
     if menu.data == 'del_all':
         conn = MySQLdb.connect(
@@ -358,6 +355,5 @@ def inline(menu):
                 conn.close()
                 mess_delete(menu.message.chat.id)
                 inline(begin_notes)
-
 
 bot.polling(none_stop=True, interval=0)
