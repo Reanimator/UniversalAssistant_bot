@@ -356,4 +356,5 @@ def inline(menu):
                 mess_delete(menu.message.chat.id)
                 inline(begin_notes)
 
+
 bot.polling(none_stop=True, interval=0)
