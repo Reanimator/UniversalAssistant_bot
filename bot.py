@@ -237,13 +237,11 @@ def inline(menu):
             menu.from_user.id)
         rows = cursor.fetchall()
         mass_notes = {}
-        j = 1
         for i in range(len(rows)):
             delete_mess[menu.message.chat.id].append(bot.send_message(
                 menu.message.chat.id, ('%d -- %s' %
-                                       (j, rows[i][1]))).message_id)  # rows[i][0]
+                                       (i + 1, rows[i][1]))).message_id)  # rows[i][0]
             mass_notes[rows[i][0]] = rows[i][1]
-            j += 1
         conn.close()
 
         # button output notes/вывод кнопок заметок
