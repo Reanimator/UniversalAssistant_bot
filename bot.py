@@ -319,14 +319,12 @@ def inline(menu):
                 lang(lang_index, menu.message.chat.id)[14]).message_id)
     if menu.data == 'del':
         key = types.InlineKeyboardMarkup()
-        j = 1
-        for i in mass_notes:
+        for seq_number, record_number in enumerate(mass_notes):
             temp_key = types.InlineKeyboardButton(
                 text='%d -- %s' %
-                (j, mass_notes[i]), callback_data='del_file%i' %
-                i)
+                (seq_number, mass_notes[record_number]), callback_data='del_file%i' %
+                record_number)
             key.add(temp_key)
-            j += 1
         mess_delete(menu.message.chat.id)
         delete_mess[menu.message.chat.id].append(
             bot.send_message(
